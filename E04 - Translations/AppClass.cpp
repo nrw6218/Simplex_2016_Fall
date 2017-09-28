@@ -7,12 +7,13 @@ void Application::InitVariables(void)
 	////Alberto needed this at this position for software recording.
 	//m_pWindow->setPosition(sf::Vector2i(710, 0));
 
+	//Make MyMesh object
+	m_pMesh = new MyMesh();
+	m_pMesh->GenerateCube(2.0f, C_BROWN);
 
-	//Make a pointer array of cubes
-	for (uint i = 0; i < 46; i++) {
-		myCubes[i] = MyMesh();
-		myCubes->GenerateCube(1.0f, C_BLACK);
-	}
+	//Make MyMesh object
+	m_pMesh1 = new MyMesh();
+	m_pMesh1->GenerateCube(1.0f, C_WHITE);
 }
 void Application::Update(void)
 {
@@ -35,10 +36,7 @@ void Application::Display(void)
 
 	m_m4Object1 = glm::translate(m_m4Object1, vector3(0.01f, 0.0f, 0.0f));
 	//m_m4Object1 = glm::scale(m_m4Object1, vector3(1.01f, 1.0f, 1.0f));
-
-	for (uint i = 0; i < 46; i++) {
-		myCubes[i].Render(m4Projection, m4View, m_m4Object1);
-	}
+	m_m4Object1 = m_m4Object1 * glm::rotate(matrix4(), 0.1f, AXIS_Z);
 
 	m_pMesh->Render(m4Projection, m4View, m_m4Object1);
 	//m_pMesh1->Render(m4Projection, m4View, glm::translate(vector3( 3.0f, 0.0f, 0.0f)));
