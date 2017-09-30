@@ -276,7 +276,29 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	vector3* divisions = new vector3[a_nSubdivisions];
+	vector3 point0(0, a_fHeight/2.0, 0); //Tip
+	vector3 point1(0, -a_fHeight / 2.0, 0); //BaseCenter
+
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		divisions[i] = vector3(cos((360 / a_nSubdivisions*i)*PI / 180)*a_fRadius, -a_fHeight / 2.0, sin((360 / a_nSubdivisions*i)*PI / 180)*a_fRadius);
+	}
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		if (i < a_nSubdivisions - 1) {
+			//Top
+			AddTri(point0, divisions[i + 1], divisions[i]);
+			//Base
+			AddTri(point1, divisions[i], divisions[i + 1]);
+		}
+		else {
+			//Top
+			AddTri(divisions[0], divisions[i], point0);
+			//Base
+			AddTri(divisions[i], divisions[0], point1);
+		}
+	}
+
+	//GenerateCube(a_fRadius * 2.0f, a_v3Color);
 	// -------------------------------
 
 	// Adding information about color
@@ -300,7 +322,38 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	vector3* bottom = new vector3[a_nSubdivisions];
+	vector3* top = new vector3[a_nSubdivisions];
+	vector3 bottomCenter(0, -a_fHeight / 2, 0);
+	vector3 topCenter(0, a_fHeight / 2, 0);
+
+	//Set up bottom circle
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		bottom[i] = vector3(cos((360 / a_nSubdivisions*i)*PI/180)*a_fRadius, -a_fHeight / 2.0, sin((360 / a_nSubdivisions*i)*PI / 180)*a_fRadius);
+	}
+	//Set up top circle
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		top[i] = vector3(cos((360 / a_nSubdivisions*i)*PI / 180)*a_fRadius, a_fHeight / 2.0, sin((360 / a_nSubdivisions*i)*PI / 180)*a_fRadius);
+	}
+
+	//Make quads and tris
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		if (i < a_nSubdivisions - 1) {
+			//Quad
+			AddQuad(top[i], top[i + 1], bottom[i], bottom[i + 1]);
+			//Tri
+			AddTri(top[i+1], top[i], topCenter);
+			AddTri(bottom[i], bottom[i + 1], bottomCenter);
+		}
+		else {
+			//Quad
+			AddQuad(top[i], top[0], bottom[i], bottom[0]);
+			//Tri
+			AddTri(top[0], top[i], topCenter);
+			AddTri(bottom[i], bottom[0], bottomCenter);
+		}
+	}
+
 	// -------------------------------
 
 	// Adding information about color
@@ -330,7 +383,45 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
+	vector3* bottomOuter = new vector3[a_nSubdivisions];
+	vector3* bottomInner = new vector3[a_nSubdivisions];
+	vector3* topOuter = new vector3[a_nSubdivisions];
+	vector3* topInner = new vector3[a_nSubdivisions];
+	vector3 bottomCenter(0, -a_fHeight / 2, 0);
+	vector3 topCenter(0, a_fHeight / 2, 0);
+
+	//Set up bottom circle
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		bottomOuter[i] = vector3(cos((360 / a_nSubdivisions*i)*PI / 180)*a_fOuterRadius, -a_fHeight / 2.0, sin((360 / a_nSubdivisions*i)*PI / 180)*a_fOuterRadius);
+		bottomInner[i] = vector3(cos((360 / a_nSubdivisions*i)*PI / 180)*a_fInnerRadius, -a_fHeight / 2.0, sin((360 / a_nSubdivisions*i)*PI / 180)*a_fInnerRadius);
+	}
+	//Set up top circle
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		topOuter[i] = vector3(cos((360 / a_nSubdivisions*i)*PI / 180)*a_fOuterRadius, a_fHeight / 2.0, sin((360 / a_nSubdivisions*i)*PI / 180)*a_fOuterRadius);
+		topInner[i] = vector3(cos((360 / a_nSubdivisions*i)*PI / 180)*a_fInnerRadius, a_fHeight / 2.0, sin((360 / a_nSubdivisions*i)*PI / 180)*a_fInnerRadius);
+	}
+
+	//Make quads and tris
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		if (i < a_nSubdivisions - 1) {
+			//Outer Sides
+			AddQuad(topOuter[i], topOuter[i + 1], bottomOuter[i], bottomOuter[i + 1]);
+			//Inner Sides
+			AddQuad(topInner[i + 1], topInner[i], bottomInner[i + 1], bottomInner[i]);
+			//Top and bottom
+			AddQuad(topOuter[i + 1], topOuter[i], topInner[i + 1], topInner[i]);
+			AddQuad(bottomOuter[i], bottomOuter[i + 1], bottomInner[i], bottomInner[i + 1]);
+		}
+		else {
+			//Outsides
+			AddQuad(topOuter[i], topOuter[0], bottomOuter[i], bottomOuter[0]);
+			//Inner Sides
+			AddQuad(topInner[0], topInner[i], bottomInner[0], bottomInner[i]);
+			//Top and bottom
+			AddQuad(topOuter[0], topOuter[i], topInner[0], topInner[i]);
+			AddQuad(bottomOuter[i], bottomOuter[0], bottomInner[i], bottomInner[0]);
+		}
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -387,6 +478,12 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 	Init();
 
 	// Replace this with your code
+
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		for (int j = 0; j < a_nSubdivisions; j++) {
+
+		}
+	}
 	GenerateCube(a_fRadius * 2.0f, a_v3Color);
 	// -------------------------------
 
