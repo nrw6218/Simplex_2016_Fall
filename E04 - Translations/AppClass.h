@@ -17,6 +17,8 @@ class Application
 	matrix4 m_m4Object1;
 	MyMesh* m_pMesh = nullptr;
 	MyMesh* m_pMesh1 = nullptr;
+	MyMesh* cubes;
+	matrix4* locations;
 
 	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
 private:
