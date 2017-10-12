@@ -275,7 +275,7 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	Release();
 	Init();
 
-	// Replace this with your code
+	// Points on cone
 	vector3* divisions = new vector3[a_nSubdivisions];
 	vector3 point0(0, a_fHeight/2.0, 0); //Tip
 	vector3 point1(0, -a_fHeight / 2.0, 0); //BaseCenter
@@ -298,7 +298,11 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 		}
 	}
 
-	//GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	//Delete the pointers
+	if (divisions != nullptr) {
+		delete[] divisions;
+		divisions = nullptr;
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -354,6 +358,16 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 		}
 	}
 
+	//Clear out the pointers holding the 
+	if (bottom != nullptr) {
+		delete[] bottom;
+		bottom = nullptr;
+	}
+	if (top != nullptr) {
+		delete[] top;
+		top = nullptr;
+	}
+
 	// -------------------------------
 
 	// Adding information about color
@@ -382,7 +396,7 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	Release();
 	Init();
 
-	// Replace this with your code
+	//Hold the inner/outer points and 
 	vector3* bottomOuter = new vector3[a_nSubdivisions];
 	vector3* bottomInner = new vector3[a_nSubdivisions];
 	vector3* topOuter = new vector3[a_nSubdivisions];
@@ -422,6 +436,24 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 			AddQuad(bottomOuter[i], bottomOuter[0], bottomInner[i], bottomInner[0]);
 		}
 	}
+
+	//Clear out the pointers holding the 
+	if (bottomOuter != nullptr) {
+		delete[] bottomOuter;
+		bottomOuter = nullptr;
+	}
+	if (topOuter != nullptr) {
+		delete[] topOuter;
+		topOuter = nullptr;
+	}
+	if (bottomInner != nullptr) {
+		delete[] bottomInner;
+		bottomInner = nullptr;
+	}
+	if (topInner != nullptr) {
+		delete[] topInner;
+		topInner = nullptr;
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -449,11 +481,32 @@ void MyMesh::GenerateTorus(float a_fOuterRadius, float a_fInnerRadius, int a_nSu
 	if (a_nSubdivisionsB > 360)
 		a_nSubdivisionsB = 360;
 
+
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
+	//Radius of tube
+	float r = (a_fOuterRadius - a_fInnerRadius) / 2.0f;
+	//Center of tube to center of taurus
+	float R = a_fInnerRadius + r;
+
+	for (int i = 0; i < a_nSubdivisionsA; i++) {
+		//Get the first and second angle using the current subdivision
+		float theta0 = (2 * PI) / a_nSubdivisionsA * i;
+		float theta1 = (2 * PI) / a_nSubdivisionsA * (i + 1);
+		for (int j = 0; j < a_nSubdivisionsA; j++) {
+			float phi0 = (2 * PI) / a_nSubdivisionsA * j;
+			float phi1 = (2 * PI) / a_nSubdivisionsA * (j + 1);
+
+			//Add the quad with four points using the given angles
+			vector3 point1(((R + r*cos(theta0))*cos(phi0)), ((R + r*cos(theta0))*sin(phi0)), r * sin(theta0));
+			vector3 point2(((R + r*cos(theta0))*cos(phi1)), ((R + r*cos(theta0))*sin(phi1)), r * sin(theta0));
+			vector3 point3(((R + r*cos(theta1))*cos(phi0)), ((R + r*cos(theta1))*sin(phi0)), r * sin(theta1));
+			vector3 point4(((R + r*cos(theta1))*cos(phi1)), ((R + r*cos(theta1))*sin(phi1)), r * sin(theta1));
+			AddQuad(point1, point2, point3, point4);
+		}
+	}
+
 	// -------------------------------
 
 	// Adding information about color
@@ -471,20 +524,31 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 		GenerateCube(a_fRadius * 2.0f, a_v3Color);
 		return;
 	}
-	if (a_nSubdivisions > 6)
-		a_nSubdivisions = 6;
+	if (a_nSubdivisions > 360)
+		a_nSubdivisions = 360;
 
 	Release();
 	Init();
 
-	// Replace this with your code
-
+	//Loop through the subdivisions
 	for (int i = 0; i < a_nSubdivisions; i++) {
+		//Find the first and second angle using the current subdivision
+		float theta0 = (2 * PI) / a_nSubdivisions * i;
+		float theta1 = (2 * PI) / a_nSubdivisions * (i+1);
 		for (int j = 0; j < a_nSubdivisions; j++) {
+			float phi0 = PI / a_nSubdivisions * j;
+			float phi1 = PI / a_nSubdivisions * (j+1);
 
+			//Add the quad with the given angles
+			vector3 point1(a_fRadius*cos(theta0)*sin(phi0), a_fRadius*sin(theta0)*sin(phi0), a_fRadius*cos(phi0));
+			vector3 point2(a_fRadius*cos(theta0)*sin(phi1), a_fRadius*sin(theta0)*sin(phi1), a_fRadius*cos(phi1));
+			vector3 point3(a_fRadius*cos(theta1)*sin(phi0), a_fRadius*sin(theta1)*sin(phi0), a_fRadius*cos(phi0));
+			vector3 point4(a_fRadius*cos(theta1)*sin(phi1), a_fRadius*sin(theta1)*sin(phi1), a_fRadius*cos(phi1));
+			AddQuad(point1,point2,point3,point4);
 		}
 	}
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+
+
 	// -------------------------------
 
 	// Adding information about color
