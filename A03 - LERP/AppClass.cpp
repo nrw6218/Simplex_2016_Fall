@@ -39,6 +39,17 @@ void Application::InitVariables(void)
 	{
 		vector3 v3Color = WaveLengthToRGB(uColor); //calculate color based on wavelength
 		m_shapeList.push_back(m_pMeshMngr->GenerateTorus(fSize, fSize - 0.1f, 3, i, v3Color)); //generate a custom torus and add it to the meshmanager
+		
+		//Create a vector holding each stop for this shape
+		std::vector<vector3> stops;
+		for (uint j = 1; j <= i; j++) {
+			stops.push_back(vector3(cos((360 / j)*PI / 180)*fSize, sin((360 / j)*PI / 180)*fSize, 0));
+		}
+
+		//Add the vector of stops for this shape to the vector of all stops
+		stopList.push_back(stops);
+		routes.push_back(0);
+
 		fSize += 0.5f; //increment the size for the next orbit
 		uColor -= static_cast<uint>(decrements); //decrease the wavelength
 	}
@@ -50,6 +61,39 @@ void Application::Update(void)
 
 	//Is the arcball active?
 	ArcBall();
+
+	//Get a timer
+	static float fTimer = 0;	//store the new timer
+	static uint uClock = m_pSystem->GenClock(); //generate a new clock for that timer
+	fTimer += m_pSystem->GetDeltaTime(uClock); //get the delta time for that timer
+
+	float fDeltaTime = 2.0f;
+	float fPercentage = MapValue(fTimer, 0.0f, fDeltaTime, 0.0f, 1.0f);
+
+	//Clear the render list every update
+	m_pMeshMngr->ClearRenderList();
+
+	//Update the ball for each orbit
+	for (uint i = 0; i < m_uOrbits; ++i) {
+		vector3 v3CurrentPos = glm::lerp(stopList[i][routes[i]], stopList[i][routes[i]], fPercentage);
+		matrix4 m4Model = glm::translate(IDENTITY_M4, v3CurrentPos);
+
+		//draw spheres
+		m_pMeshMngr->AddSphereToRenderList(m4Model * glm::scale(vector3(0.1)), C_WHITE);
+	}
+
+	if (fPercentage >= 1.0f) {
+		for (uint i = 0; i < m_uOrbits; i++) {
+			if (routes[i] < stopList[i].size()-1) {
+				routes[i]++;
+			}
+			else {
+				routes[i] = 0;
+			}
+			routes[i] %= stopList[i].size();
+		}
+		fTimer = m_pSystem->GetDeltaTime(uClock);
+	}
 
 	//Is the first person camera active?
 	CameraRotation();
@@ -72,8 +116,9 @@ void Application::Display(void)
 	{
 		m_pMeshMngr->AddMeshToRenderList(m_shapeList[i], glm::rotate(m4Offset, 90.0f, AXIS_X));
 
+
 		//calculate the current position
-		vector3 v3CurrentPos = ZERO_V3;
+		vector3 v3CurrentPos = stopList[i][0];
 		matrix4 m4Model = glm::translate(m4Offset, v3CurrentPos);
 
 		//draw spheres
