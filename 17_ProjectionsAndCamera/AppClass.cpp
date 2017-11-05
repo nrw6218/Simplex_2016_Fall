@@ -63,8 +63,8 @@ void Application::Display(void)
 
 	vector3 m_v3LookingAt = m_v3CameraPosition;
 	m_v3LookingAt.z -= 1.0f;
-	//matrix4 m4Projection = glm::perspective(45.0f, fRatio, 0.01f, 1000.0f);
-	matrix4 m4Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 1000.0f);
+	matrix4 m4Projection = glm::perspective(45.0f, fRatio, 0.01f, 1000.0f);
+	//matrix4 m4Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.1f, 1000.0f);
 	matrix4 m4View = glm::lookAt(vector3(0, 0, 30) + m_v3CameraPosition, vector3(0, 0, 0) + m_v3LookingAt, AXIS_Y);  //m_pCameraMngr->GetViewMatrix();
 	matrix4 m4Model = ToMatrix4(m_qArcBall);
 

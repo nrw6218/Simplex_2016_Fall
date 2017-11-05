@@ -48,6 +48,10 @@ void Application::Display(void)
 	//Clear the screen
 	ClearScreen();
 
+	static float fPos = 0.0f;
+
+	float fRatio = m_pSystem->GetWindowRatio();
+
 	//clear the render list
 	m_pMeshMngr->ClearRenderList();
 

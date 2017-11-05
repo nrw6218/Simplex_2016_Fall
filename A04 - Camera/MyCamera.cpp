@@ -129,7 +129,13 @@ void Simplex::MyCamera::SetPositionTargetAndUp(vector3 a_v3Position, vector3 a_v
 {
 	m_v3Position = a_v3Position;
 	m_v3Target = a_v3Target;
-	m_v3Up = a_v3Position + a_v3Upward;
+	m_v3Top = m_v3Position + a_v3Upward;
+
+	//Update forward, right and up vectors
+	m_v3Forward = glm::normalize(m_v3Target - m_v3Position);
+	m_v3Up = glm::normalize(m_v3Top - m_v3Position);
+	m_v3Right = glm::normalize(glm::cross(m_v3Forward, m_v3Up));
+
 	CalculateProjectionMatrix();
 }
 
@@ -153,4 +159,60 @@ void Simplex::MyCamera::CalculateProjectionMatrix(void)
 										m_v2Vertical.x, m_v2Vertical.y, //vertical
 										m_v2NearFar.x, m_v2NearFar.y); //near and far
 	}
+}
+
+void Simplex::MyCamera::MoveForward(float translate)
+{
+	//Perform the translation
+	m_v3Position -= m_v3Forward * translate;
+	m_v3Target = m_v3Position;
+	m_v3Target += m_v3Forward;
+	m_v3Top -= m_v3Forward * translate;
+
+	//Update forward, right and up vectors
+	m_v3Forward = glm::normalize(m_v3Target - m_v3Position);
+	m_v3Up = glm::normalize(m_v3Top - m_v3Position);
+	m_v3Right = glm::normalize(glm::cross(m_v3Forward, m_v3Up));
+}
+
+void Simplex::MyCamera::MoveUp(float translate)
+{
+	//Perform the translation
+	m_v3Position += m_v3Up * translate;
+	m_v3Target = m_v3Position;
+	m_v3Target += m_v3Forward;
+	m_v3Top = m_v3Position + m_v3Up;
+
+	//Update forward, right and up vectors
+	m_v3Forward = glm::normalize(m_v3Target - m_v3Position);
+	m_v3Up = glm::normalize(m_v3Top - m_v3Position);
+	m_v3Right = glm::normalize(glm::cross(m_v3Forward, m_v3Up));
+}
+
+void Simplex::MyCamera::MoveSideways(float translate)
+{
+	//Perform the translation
+	m_v3Position += m_v3Right * translate;
+	m_v3Target = m_v3Position;
+	m_v3Target += m_v3Forward;
+	m_v3Top += m_v3Right * translate;
+
+	//Update forward, right and up vectors
+	m_v3Forward = glm::normalize(m_v3Target - m_v3Position);
+	m_v3Up = glm::normalize(m_v3Top - m_v3Position);
+	m_v3Right = glm::normalize(glm::cross(m_v3Forward, m_v3Up));
+}
+
+void Simplex::MyCamera::Rotate(float a_fYaw, float a_fPitch, float a_fRoll)
+{
+	//Calculate quaternion rotations for yaw and pitch
+	quaternion yaw = glm::angleAxis(glm::degrees(a_fYaw), m_v3Up);
+	quaternion pitch = glm::angleAxis(glm::degrees(a_fPitch), m_v3Right);
+
+	//Rotate the forward vector
+	m_v3Forward = glm::rotate(glm::cross(pitch,yaw),glm::normalize(m_v3Target - m_v3Position));
+	m_v3Target = m_v3Position + m_v3Forward;
+	m_v3Right = glm::normalize(glm::cross(m_v3Forward, m_v3Up));
+
+	m_v3Top = m_v3Position + m_v3Up;
 }

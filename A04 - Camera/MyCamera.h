@@ -14,6 +14,9 @@ class MyCamera
 {
 	vector3 m_v3Position = vector3(0.0f, 0.0f, 10.0f); //Where my camera is located
 	vector3 m_v3Target = vector3(0.0f, 0.0f, 0.0f); //What I'm looking at
+	vector3 m_v3Forward = vector3(0.0f, 0.0f, -1.0f); //What is ahead
+	vector3 m_v3Right = vector3(1.0f, 0.0f, 0.0f); //What is to the right
+	vector3 m_v3Top = vector3(0.0f, 0.0f, 0.0f);; //Where the top of my camera is located
 	vector3 m_v3Up = vector3(0.0f, 1.0f, 0.0f); //What is up
 
 	bool m_bPerspective = true; //perspective view? False is Orthographic
@@ -28,6 +31,7 @@ class MyCamera
 
 	matrix4 m_m4View; //View matrix
 	matrix4 m_m4Projection; //Projection Matrix
+
 public:
 	/*
 	USAGE: Constructor
@@ -211,6 +215,34 @@ public:
 	OUTPUT: ---
 	*/
 	void CalculateProjectionMatrix(void);
+
+	/*
+	USAGE: Move the position of the camera along the translation vector
+	ARGUMENTS: vector3 translate -> the translation vector
+	OUTPUT: ---
+	*/
+	void MoveForward(float translate);
+
+	/*
+	USAGE: Move the position of the camera along the translation vector
+	ARGUMENTS: vector3 translate -> the translation vector
+	OUTPUT: ---
+	*/
+	void MoveUp(float translate);
+
+	/*
+	USAGE: Move the position of the camera along the translation vector
+	ARGUMENTS: vector3 translate -> the translation vector
+	OUTPUT: ---
+	*/
+	void MoveSideways(float translate);
+
+	/*
+	USAGE: Update the camera rotation
+	ARGUMENTS: Yaw, pitch and roll of rotation
+	OUTPUT: ---
+	*/
+	void Rotate(float a_fYaw, float a_fPitch, float a_fRoll);
 };
 
 } //namespace Simplex

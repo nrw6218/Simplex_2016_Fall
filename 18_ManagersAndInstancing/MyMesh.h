@@ -113,6 +113,8 @@ public:
 	OUTPUT: ---
 	*/
 	void Render(MyCamera* a_pCamera, matrix4 a_mModel);
+
+	void Render(MyCamera* a_pCamera, std::vector<matrix4*> a_ToWorldList);
 	/*
 	USAGE: Will render this mesh a_ToWorlsList size times
 	ARGUMENTS:
@@ -217,6 +219,8 @@ public:
 	*/
 	void GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Color = C_WHITE);
 #pragma endregion
+
+	std::vector<vector3> GetVertexList();
 };
 
 }//namespace Simplex
