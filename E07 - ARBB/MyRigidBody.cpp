@@ -84,10 +84,38 @@ void MyRigidBody::SetModelMatrix(matrix4 a_m4ModelMatrix)
 
 	m_m4ToWorld = a_m4ModelMatrix;
 	
-	//your code goes here---------------------
-	m_v3MinG = m_v3MinL;
-	m_v3MaxG = m_v3MaxL;
-	//----------------------------------------
+	//Get the eight corners of the local bounding box
+	v3Corners[0] = m_v3MinL;
+	v3Corners[1] = vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MaxL.z);
+	v3Corners[2] = vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MinL.z);
+	v3Corners[3] = vector3(m_v3MinL.x, m_v3MinL.y, m_v3MaxL.z);
+
+	v3Corners[4] = vector3(m_v3MaxL.x, m_v3MaxL.y, m_v3MinL.z);
+	v3Corners[5] = vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MinL.z);
+	v3Corners[6] = vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MaxL.z);
+	v3Corners[7] = m_v3MaxL;
+
+	//Convert these coordinates to world space
+	for (uint i = 0; i < 8; i++) {
+		v3Corners[i] = vector3(m_m4ToWorld * vector4(v3Corners[i], 1.0f));
+	}
+
+	//Find the max and min points
+	m_v3MinG = m_v3MaxG = v3Corners[0];
+
+	for (uint i = 0; i < 8; i++) {
+		//Check the x-values
+		if (m_v3MinG.x > v3Corners[i].x) m_v3MinG.x = v3Corners[i].x;
+		else if (m_v3MaxG.x < v3Corners[i].x) m_v3MaxG.x = v3Corners[i].x;
+
+		//Check the y-values
+		if (m_v3MinG.y > v3Corners[i].y) m_v3MinG.y = v3Corners[i].y;
+		else if (m_v3MaxG.y < v3Corners[i].y) m_v3MaxG.y = v3Corners[i].y;
+
+		//Check the z-values
+		if (m_v3MinG.z > v3Corners[i].z) m_v3MinG.z = v3Corners[i].z;
+		else if (m_v3MaxG.z < v3Corners[i].z) m_v3MaxG.z = v3Corners[i].z;
+	}
 
 	//we calculate the distance between min and max vectors
 	m_v3ARBBSize = m_v3MaxG - m_v3MinG;
