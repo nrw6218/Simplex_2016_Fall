@@ -276,16 +276,93 @@ void MyRigidBody::AddToRenderList(void)
 
 uint MyRigidBody::SAT(MyRigidBody* const a_pOther)
 {
-	/*
-	Your code goes here instead of this comment;
+	float tempA;
+	float tempB;
 
-	For this method, if there is an axis that separates the two objects
-	then the return will be different than 0; 1 for any separating axis
-	is ok if you are not going for the extra credit, if you could not
-	find a separating axis you need to return 0, there is an enum in
-	Simplex that might help you [eSATResults] feel free to use it.
-	(eSATResults::SAT_NONE has a value of 0)
-	*/
+	matrix4 m4Rotation;
+	matrix4 m4AbsRotation;
+
+	//Calculate the rotation matrix expressing a_pOther in this
+	//rigidbody's frame
+	for (uint i = 0; i < 3; i++) {
+		for (uint j = 0; j < 3; j++) {
+			m4Rotation[i][j] = glm::dot(m_m4ToWorld[i], a_pOther->m_m4ToWorld[j]);
+		}
+	}
+
+	//Computer the translation vector
+	vector4 v3Translation = (vector4(a_pOther->m_v3Center, 1.0f) * m_m4ToWorld) - (vector4(m_v3Center, 1.0f) * m_m4ToWorld);
+	//Bring the translation into this rigidbody's coordinate frame
+	v3Translation = vector4(glm::dot(v3Translation, m_m4ToWorld[0]), glm::dot(v3Translation, m_m4ToWorld[1]), glm::dot(v3Translation, m_m4ToWorld[2]),1.0f);
+
+	//Compute the absolute value of m4Rotation
+	for (uint i = 0; i < 3; i++) {
+		for (uint j = 0; j < 3; j++) {
+			m4AbsRotation[i][j] = abs(m4Rotation[i][j]) + glm::epsilon<float>();
+		}
+	}
+	
+	for (uint i = 0; i < 3; i++) {
+		tempA = m_v3HalfWidth[i];
+		tempB = a_pOther->m_v3HalfWidth[0] * m4AbsRotation[i][0] + a_pOther->m_v3HalfWidth[1] * m4AbsRotation[i][1] + a_pOther->m_v3HalfWidth[2] * m4AbsRotation[i][2];
+		if (abs(v3Translation[i]) > tempA + tempB) {
+			return 1;
+		}
+	}
+
+	for (uint i = 0; i < 3; i++) {
+		tempA = m_v3HalfWidth[0] * m4AbsRotation[0][i] + m_v3HalfWidth[1] * m4AbsRotation[1][i] + m_v3HalfWidth[2] * m4AbsRotation[2][i];
+		tempB = a_pOther->m_v3HalfWidth[i];
+		if (abs(v3Translation[0] * m4Rotation[0][i] + v3Translation[1] * m4Rotation[1][i] + v3Translation[2] * m4Rotation[2][i]) > tempA + tempB) {
+			return 1;
+		}
+	}
+
+	// Test axis L = A0 x B0
+	tempA = m_v3HalfWidth[1] * m4AbsRotation[2][0] + m_v3HalfWidth[2] * m4AbsRotation[1][0];
+	tempB = a_pOther->m_v3HalfWidth[1] * m4AbsRotation[0][2] + a_pOther->m_v3HalfWidth[2] * m4AbsRotation[0][1];
+	if (abs(v3Translation[2] * m4Rotation[1][0] - v3Translation[1] * m4Rotation[2][0]) > tempA + tempB) return 1;
+
+	// Test axis L = A0 x B1
+	tempA = m_v3HalfWidth[1] * m4AbsRotation[2][1] + m_v3HalfWidth[2] * m4AbsRotation[1][1];
+	tempB = a_pOther->m_v3HalfWidth[0] * m4AbsRotation[0][2] + a_pOther->m_v3HalfWidth[2] * m4AbsRotation[0][0];
+	if (abs(v3Translation[2] * m4Rotation[1][1] - v3Translation[1] * m4Rotation[2][1]) > tempA + tempB) return 1;
+
+	// Test axis L = A0 x B2
+	tempA = m_v3HalfWidth[1] * m4AbsRotation[2][2] + m_v3HalfWidth[2] * m4AbsRotation[1][2];
+	tempB = a_pOther->m_v3HalfWidth[0] * m4AbsRotation[0][1] + a_pOther->m_v3HalfWidth[1] * m4AbsRotation[0][0];
+	if (abs(v3Translation[2] * m4Rotation[1][2] - v3Translation[1] * m4Rotation[2][2]) > tempA + tempB) return 1;
+
+	// Test axis L = A1 x B0
+	tempA = m_v3HalfWidth[0] * m4AbsRotation[2][0] + m_v3HalfWidth[2] * m4AbsRotation[0][0];
+	tempB = a_pOther->m_v3HalfWidth[1] * m4AbsRotation[1][2] + a_pOther->m_v3HalfWidth[2] * m4AbsRotation[1][1];
+
+	if (abs(v3Translation[0] * m4Rotation[2][0] - v3Translation[2] * m4Rotation[0][0]) > tempA + tempB) return 1;
+
+	// Test axis L = A1 x B1
+	tempA = m_v3HalfWidth[0] * m4AbsRotation[2][1] + m_v3HalfWidth[2] * m4AbsRotation[0][1];
+	tempB = a_pOther->m_v3HalfWidth[0] * m4AbsRotation[1][2] + a_pOther->m_v3HalfWidth[2] * m4AbsRotation[1][0];
+	if (abs(v3Translation[0] * m4Rotation[2][1] - v3Translation[2] * m4Rotation[0][1]) > tempA + tempB) return 1;
+
+	// Test axis L = A1 x B2
+	tempA = m_v3HalfWidth[0] * m4AbsRotation[2][2] + m_v3HalfWidth[2] * m4AbsRotation[0][2];
+	tempB = a_pOther->m_v3HalfWidth[0] * m4AbsRotation[1][1] + a_pOther->m_v3HalfWidth[1] * m4AbsRotation[1][0];
+	if (abs(v3Translation[0] * m4Rotation[2][2] - v3Translation[2] * m4Rotation[0][2]) > tempA + tempB) return 1;
+
+	// Test axis L = A2 x B0
+	tempA = m_v3HalfWidth[0] * m4AbsRotation[1][0] + m_v3HalfWidth[1] * m4AbsRotation[0][0];
+	tempB = a_pOther->m_v3HalfWidth[1] * m4AbsRotation[2][2] + a_pOther->m_v3HalfWidth[2] * m4AbsRotation[2][1];
+	if (abs(v3Translation[1] * m4Rotation[0][0] - v3Translation[0] * m4Rotation[1][0]) > tempA + tempB) return 1;
+
+	// Test axis L = A2 x B1
+	tempA = m_v3HalfWidth[0] * m4AbsRotation[1][1] + m_v3HalfWidth[1] * m4AbsRotation[0][1];
+	tempB = a_pOther->m_v3HalfWidth[0] * m4AbsRotation[2][2] + a_pOther->m_v3HalfWidth[2] * m4AbsRotation[2][0];
+	if (abs(v3Translation[1] * m4Rotation[0][1] - v3Translation[0] * m4Rotation[1][1]) > tempA + tempB) return 1;
+
+	// Test axis L = A2 x B2
+	tempA = m_v3HalfWidth[0] * m4AbsRotation[1][2] + m_v3HalfWidth[1] * m4AbsRotation[0][2];
+	tempB = a_pOther->m_v3HalfWidth[0] * m4AbsRotation[2][1] + a_pOther->m_v3HalfWidth[1] * m4AbsRotation[2][0];
+	if (abs(v3Translation[1] * m4Rotation[0][2] - v3Translation[0] * m4Rotation[1][2]) > tempA + tempB) return 1;
 
 	//there is no axis test that separates this two objects
 	return eSATResults::SAT_NONE;
